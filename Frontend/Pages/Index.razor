@@ -1,7 +1,24 @@
 ﻿@page "/"
-
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
+<p>@clientIp</p>
+@code{
+
+private string clientIp;
+
+protected override async Task OnInitializedAsync()
+{
+    clientIp = await GetIPAddress();
+}
+protected async Task<string> GetIPAddress()
+{
+    
+    //string hostName = Dns.GetHostName(); // Retrive the Name of HOST
+    var list = await Dns.GetHostAddressesAsync("localhost");
+    return list[0].ToString();
+}
+
+}
