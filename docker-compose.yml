@@ -16,7 +16,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: backend
-        image: mykubecr.azurecr.io/backend:v1
+        image: mykubecr.azurecr.io/backend:v21
         resources:
           requests:
             cpu: 100m
@@ -26,7 +26,7 @@ spec:
             memory: 256Mi
         ports:
         - name: http
-          containerPort: 6001
+          containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -35,9 +35,9 @@ metadata:
   labels:
     app: backend
 spec:
-  type: LoadBalancer
+  type: ClusterIP # Default. Alternatives: NodePort, LoadBalancer, 
   ports:
-    - port: 6001
+    - port: 80
       protocol: TCP
       targetPort: http
   selector:
@@ -61,7 +61,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: frontend
-        image: mykubecr.azurecr.io/frontend:v11
+        image: mykubecr.azurecr.io/frontend:v2.0.2
         resources:
           requests:
             cpu: 100m
@@ -71,7 +71,7 @@ spec:
             memory: 256Mi
         ports:
         - name: http
-          containerPort: 5001
+          containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -87,3 +87,55 @@ spec:
       targetPort: http
   selector:
     app: frontend
+
+
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: frontend
+#   namespace: kube-public
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: frontend
+#   template:
+#     metadata:
+#       labels:
+#         app: frontend
+#     spec:
+#       nodeSelector:
+#         "beta.kubernetes.io/os": linux
+#       containers:
+#       - name: frontend
+#         image: mykubecr.azurecr.io/frontend:v
+#         resources:
+#           requests:
+#             cpu: 100m
+#             memory: 128Mi
+#           limits:
+#             cpu: 250m
+#             memory: 256Mi
+#         env:
+#         - name: BACKEND
+#           value: "backend"
+#         ports:
+#         - name: http
+#           containerPort: 80
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: frontend
+#   namespace: kube-public
+#   labels:
+#     app: frontend
+# spec:
+#   type: LoadBalancer
+#   ports:
+#     - port: 80
+#       protocol: TCP
+#       targetPort: http
+#   selector:
+#     app: frontend
