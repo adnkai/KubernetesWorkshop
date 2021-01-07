@@ -35,7 +35,17 @@ namespace Backend.Controllers
         Summary = Summaries[rng.Next(Summaries.Length)]
       })
       .ToArray();
+      
+      var stuff2 = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+      {
+        Date = DateTime.Now.AddDays(index),
+        TemperatureC = rng.Next(-20, 55),
+        Summary = Summaries[rng.Next(Summaries.Length)]
+      })
+      .ToArray();
       WriteFile("myfile.txt", stuff);
+      WriteFile2("myfile.txt", stuff2);
+
       return stuff;
         
     }
@@ -47,7 +57,20 @@ namespace Backend.Controllers
       {
         foreach (WeatherForecast line in stuff)
         {
-          file.WriteLine(line.ToString());
+          file.WriteLine("DYNAMIC SHARE: " + line.ToString());
+        }
+      }
+    }
+
+    private void WriteFile2(string filename, IEnumerable<WeatherForecast> stuff) {
+      string pathStatic = "/mnt/azureStatic/";
+      
+      using (System.IO.StreamWriter file =
+        new System.IO.StreamWriter(pathStatic+filename, true))
+      {
+        foreach (WeatherForecast line in stuff)
+        {
+          file.WriteLine("STATIC SHARE: " + line.ToString());
         }
       }
     }

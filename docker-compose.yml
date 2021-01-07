@@ -28,12 +28,19 @@ spec:
         - name: http
           containerPort: 80
         volumeMounts:
-        - mountPath: "/mnt/azure"
-          name: volume
+        - name: volume
+          mountPath: "/mnt/azure"
+        - name: azure
+          mountPath: "/mnt/azureStatic"
       volumes:
       - name: volume
         persistentVolumeClaim:
           claimName: mykubefiles
+      - name: azure
+        azureFile:
+          secretName: azure-secret
+          shareName: aksshare
+          readOnly: false
 ---
 apiVersion: v1
 kind: Service
@@ -80,12 +87,19 @@ spec:
         - name: http
           containerPort: 80
         volumeMounts:
-        - mountPath: "/mnt/azure"
-          name: volume
+        - name: volume
+          mountPath: "/mnt/azure"
+        - name: azure
+          mountPath: "/mnt/azureStatic"
       volumes:
       - name: volume
         persistentVolumeClaim:
           claimName: mykubefiles
+      - name: azure
+        azureFile:
+          secretName: azure-secret
+          shareName: aksshare
+          readOnly: false
 ---
 apiVersion: v1
 kind: Service
@@ -129,54 +143,3 @@ spec:
   resources:
     requests:
       storage: 5Gi
-
-# ---
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: frontend
-#   namespace: kube-public
-# spec:
-#   replicas: 1
-#   selector:
-#     matchLabels:
-#       app: frontend
-#   template:
-#     metadata:
-#       labels:
-#         app: frontend
-#     spec:
-#       nodeSelector:
-#         "beta.kubernetes.io/os": linux
-#       containers:
-#       - name: frontend
-#         image: mykubecr.azurecr.io/frontend:v
-#         resources:
-#           requests:
-#             cpu: 100m
-#             memory: 128Mi
-#           limits:
-#             cpu: 250m
-#             memory: 256Mi
-#         env:
-#         - name: BACKEND
-#           value: "backend"
-#         ports:
-#         - name: http
-#           containerPort: 80
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: frontend
-#   namespace: kube-public
-#   labels:
-#     app: frontend
-# spec:
-#   type: LoadBalancer
-#   ports:
-#     - port: 80
-#       protocol: TCP
-#       targetPort: http
-#   selector:
-#     app: frontend
