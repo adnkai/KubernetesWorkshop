@@ -16,7 +16,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: backend
-        image: mykubecr.azurecr.io/backend:v21
+        image: mykubecr.azurecr.io/backend:v1
         resources:
           requests:
             cpu: 100m
@@ -27,6 +27,13 @@ spec:
         ports:
         - name: http
           containerPort: 80
+        volumeMounts:
+        - mountPath: "/mnt/azure"
+          name: volume
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: mykubefiles
 ---
 apiVersion: v1
 kind: Service
@@ -35,7 +42,7 @@ metadata:
   labels:
     app: backend
 spec:
-  type: ClusterIP # Default. Alternatives: NodePort, LoadBalancer, 
+  type: ClusterIP # Default. Alternatives: NodePort, LoadBalancer, ExternalName
   ports:
     - port: 80
       protocol: TCP
@@ -61,7 +68,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: frontend
-        image: mykubecr.azurecr.io/frontend:v2.0.2
+        image: mykubecr.azurecr.io/frontend:v1
         resources:
           requests:
             cpu: 100m
@@ -72,6 +79,13 @@ spec:
         ports:
         - name: http
           containerPort: 80
+        volumeMounts:
+        - mountPath: "/mnt/azure"
+          name: volume
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: mykubefiles
 ---
 apiVersion: v1
 kind: Service
@@ -87,7 +101,34 @@ spec:
       targetPort: http
   selector:
     app: frontend
-
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: mykubefiles
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=0
+  - gid=0
+  - mfsymlinks
+  - cache=strict
+  - actimeo=30
+parameters:
+  skuName: Standard_LRS
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mykubefiles
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: mykubefiles
+  resources:
+    requests:
+      storage: 5Gi
 
 # ---
 # apiVersion: apps/v1

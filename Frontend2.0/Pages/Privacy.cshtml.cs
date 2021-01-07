@@ -19,6 +19,12 @@ namespace Frontend2._0.Pages
 
         public void OnGet()
         {
+          ViewData["lines"] = ReadFile("myfile.txt");
+        }
+        private string[] ReadFile(string filename) {
+          string path = "/mnt/azure/";
+          var lines = System.IO.File.ReadAllLines(path+filename);
+          return lines;
         }
     }
 }

@@ -2,7 +2,18 @@
 @model PrivacyModel
 @{
     ViewData["Title"] = "Privacy Policy";
+    var lines = (string[])ViewData["lines"];
+    var count = 0;
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<p>This page shows a temperature history. Sort of.</p>
+
+<div>
+  @foreach(var line in lines) {
+    count++;
+    <div>
+      <p style="background-color: "@(@count % 2 == 0 ? "lightblue" : "desert");>@line</p>
+    </div>
+  }
+</div>

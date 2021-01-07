@@ -13,22 +13,20 @@ using Frontend2._0.Models;
 
 namespace Frontend2._0.Pages
 {
-    public class IndexModel : PageModel
+  public class IndexModel : PageModel
+  {
+    private readonly ILogger<IndexModel> _logger;
+    private WeatherForecast[] forecasts;
+    public IndexModel(ILogger<IndexModel> logger)
     {
-      private readonly ILogger<IndexModel> _logger;
-      private WeatherForecast[] forecasts;
-      public IndexModel(ILogger<IndexModel> logger)
-      {
-          _logger = logger;
-      }
-
-      public void OnGet()
-      {
-        HttpClient client = new HttpClient();
-        forecasts = client.GetFromJsonAsync<WeatherForecast[]>("http://backend/weatherforecast").Result;
-        // forecasts = client.GetFromJsonAsync<WeatherForecast[]>("http://51.145.190.137/weatherforecast").Result;
-        
-        ViewData["forecasts"] = forecasts;
-      }
+        _logger = logger;
     }
+
+    public void OnGet()
+    {
+      HttpClient client = new HttpClient();
+      forecasts = client.GetFromJsonAsync<WeatherForecast[]>("http://backend/weatherforecast").Result; // backend is the kubernetes service (Type: ClientIP)
+      ViewData["forecasts"] = forecasts;
+    }
+  }
 }
