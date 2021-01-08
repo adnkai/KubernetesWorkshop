@@ -23,7 +23,7 @@ spec:
       #Container aus der ACR wählen + Ressourcen für den Pod auf dem Node spezifizieren
       containers:
       - name: backend
-        image: myacrtobi.azurecr.io/backend:v1
+        image: mykubecr.azurecr.io/backend:v1
         imagePullPolicy: Always
         resources:
           requests:
@@ -49,7 +49,7 @@ spec:
       - name: azure
         azureFile:
           secretName: azure-secret
-          shareName: fileshare
+          shareName: aksshare
           readOnly: false
 
 ---
@@ -69,7 +69,7 @@ spec:
   selector:
     app: backend
 
----
+# ---
 #Deployment - Frontend
 apiVersion: apps/v1
 kind: Deployment
@@ -89,7 +89,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: frontend
-        image: myacrtobi.azurecr.io/frontend:v1
+        image: mykubecr.azurecr.io/frontend:v1
         imagePullPolicy: Always
         resources:
           requests:
@@ -113,7 +113,7 @@ spec:
       - name: azure
         azureFile:
           secretName: azure-secret
-          shareName: fileshare
+          shareName: aksshare
           readOnly: false
 
 ---
