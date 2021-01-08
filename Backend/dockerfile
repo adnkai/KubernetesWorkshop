@@ -1,18 +1,24 @@
+#Das .NET5 SDK wird zum Compilen genutzt, -alpine ist eine kleinere Version  
 FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine AS build-env
+#Setzen des Arbeitsverzeichnisses INNERHALB des Containers
 WORKDIR /app
 
-# Copy csproj 
+# Kopieren der .csproj in das aktuelle Arbeitsverzeichniss 
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy everything else and build
+# Alle weiteren Dateien in den Container kopieren
 COPY . ./
 RUN dotnet publish -c Release -o out
 
-# Build runtime image
+#Das Image für die eigentliche Laufzeit des Containers
 FROM mcr.microsoft.com/dotnet/aspnet:latest
 WORKDIR /app
+#Kopiert alle kompilierten Dateien in den Root des Containers
 COPY --from=build-env /app/out .
+#Umgebungsvariable setzen (ASP.NET setzen der URL), * da die IP des Containers noch nicht bekannt ist
 ENV ASPNETCORE_URLS http://*:80
+#Port 80 des Containers öffnen
 EXPOSE 80
+#Starten des Projekts bei Start
 ENTRYPOINT ["dotnet", "Backend.dll"]

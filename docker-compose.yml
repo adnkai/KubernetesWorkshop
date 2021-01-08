@@ -1,22 +1,29 @@
+#Deployment - Zuständig dafür, die Pods bereitszustellen
 apiVersion: apps/v1
 kind: Deployment
+#Metadata Name - Name des späteren Deployments
 metadata:
   name: backend
 spec:
+  #Replicas - Anzahl der zu erzeugenden Pods
   replicas: 1
+  #Selector - Anzuwenden auf Pods mit Namen "backend" 
   selector:
     matchLabels:
       app: backend
+  #Template - Das Template nach dem die Pods aufgebaut werden sollen
   template:
     metadata:
       labels:
         app: backend
     spec:
+      #nodeSelector - Auswahlkriterium 
       nodeSelector:
-        "beta.kubernetes.io/os": linux
+        "beta.kubernetes.io/os": linux #Well-Known Label
+      #Container aus der ACR wählen + Ressourcen für den Pod auf dem Node spezifizieren
       containers:
       - name: backend
-        image: mykubecr.azurecr.io/backend:v1
+        image: myacrtobi.azurecr.io/backend:v1
         imagePullPolicy: Always
         resources:
           requests:
@@ -33,16 +40,20 @@ spec:
           mountPath: "/mnt/azure"
         - name: azure
           mountPath: "/mnt/azureStatic"
+      #Volumes - Persistenter Speicher für Pods
       volumes:
       - name: volume
         persistentVolumeClaim:
           claimName: mykubefiles
+      #Secret muss vorher angelegt worden sein - Docker Architektur (Folien)
       - name: azure
         azureFile:
           secretName: azure-secret
-          shareName: aksshare
+          shareName: fileshare
           readOnly: false
+
 ---
+#Service - Stellt den Netzwerkzugriff zur Verfügung
 apiVersion: v1
 kind: Service
 metadata:
@@ -50,14 +61,16 @@ metadata:
   labels:
     app: backend
 spec:
-  type: ClusterIP # Default. Alternatives: NodePort, LoadBalancer, ExternalName
+  type: ClusterIP # Default. Alternativen: NodePort, LoadBalancer, ExternalName; https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   ports:
     - port: 80
       protocol: TCP
       targetPort: http
   selector:
     app: backend
+
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -76,7 +89,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: frontend
-        image: mykubecr.azurecr.io/frontend:v1
+        image: myacrtobi.azurecr.io/frontend:v1
         imagePullPolicy: Always
         resources:
           requests:
@@ -100,9 +113,11 @@ spec:
       - name: azure
         azureFile:
           secretName: azure-secret
-          shareName: aksshare
+          shareName: fileshare
           readOnly: false
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -117,7 +132,9 @@ spec:
       targetPort: http
   selector:
     app: frontend
+
 ---
+#https://kubernetes.io/docs/concepts/storage/storage-classes/#azure-file
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -133,7 +150,9 @@ mountOptions:
   - actimeo=30
 parameters:
   skuName: Standard_LRS
+
 ---
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
