@@ -1,0 +1,66 @@
+
+#Deployment - Backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: backend
+        image: mykubecr.azurecr.io/backend:v1
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - name: http
+          containerPort: 80
+
+---
+#Service - backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: backend
+
+# ---
+# #Service - Stellt den Netzwerkzugriff zur Verfügung
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: backend
+#   labels:
+#     app: backend
+# spec:
+#   type: ClusterIP # Default. Alternativen: NodePort, LoadBalancer, ExternalName; https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+#   ports:
+#     - port: 80
+#       protocol: TCP
+#       targetPort: http
+#   selector:
+#     app: backend
