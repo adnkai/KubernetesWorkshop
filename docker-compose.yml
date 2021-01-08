@@ -70,7 +70,7 @@ spec:
     app: backend
 
 ---
-
+#Deployment - Frontend
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -117,7 +117,7 @@ spec:
           readOnly: false
 
 ---
-
+#Service - Frontend
 apiVersion: v1
 kind: Service
 metadata:
@@ -152,7 +152,7 @@ parameters:
   skuName: Standard_LRS
 
 ---
-
+#PVC - Persistent Volume Claim
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
