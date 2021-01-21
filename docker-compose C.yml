@@ -1,0 +1,104 @@
+#Deployment - Zuständig dafür, die Pods bereitszustellen
+apiVersion: apps/v1
+kind: Deployment
+#Metadata Name - Name des späteren Deployments
+metadata:
+  name: backend
+spec:
+  #Replicas - Anzahl der zu erzeugenden Pods
+  replicas: 1
+  #Selector - Anzuwenden auf Pods mit Namen "backend" 
+  selector:
+    matchLabels:
+      app: backend
+  #Template - Das Template nach dem die Pods aufgebaut werden sollen
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      #nodeSelector - Auswahlkriterium 
+      nodeSelector:
+        "beta.kubernetes.io/os": linux #Well-Known Label
+      #Container aus der ACR wählen + Ressourcen für den Pod auf dem Node spezifizieren
+      containers:
+      - name: backend
+        image: mykubecr.azurecr.io/backend:v1
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - name: http
+          containerPort: 80
+
+---
+#Service - Stellt den Netzwerkzugriff zur Verfügung
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  type: ClusterIP # Default. Alternativen: NodePort, LoadBalancer, ExternalName; https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: backend
+
+# ---
+#Deployment - Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: frontend
+        image: mykubecr.azurecr.io/frontend:v1
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - name: http
+          containerPort: 80
+
+---
+#Service - Frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: frontend
