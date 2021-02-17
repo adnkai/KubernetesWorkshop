@@ -43,11 +43,15 @@ namespace Backend.Controllers
         Summary = Summaries[rng.Next(Summaries.Length)]
       })
       .ToArray();
-      WriteFile("myfile.txt", stuff);
-      WriteFile2("myfile.txt", stuff2);
 
-      return stuff;
-        
+      try
+      {
+        WriteFile("myfile.txt", stuff);
+        WriteFile2("myfile.txt", stuff2);
+      }
+      catch(Exception){}
+      
+      return stuff;  
     }
 
     private void WriteFile(string filename, IEnumerable<WeatherForecast> stuff) {
