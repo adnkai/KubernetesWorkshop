@@ -22,8 +22,8 @@ namespace Frontend2._0.Pages
           ReadFile("myfile.txt");
         }
         private void ReadFile(string filename) {
-          string path = "/mnt/azure/";
-          string pathStatic = "/mnt/azureStatic/";
+          string path = "/mnt/volumeMountSsd/";
+          string pathStatic = "/mnt/volumeMountHdd/";
           
           ViewData["lines"] = System.IO.File.ReadAllLines(path+filename);
           ViewData["linesStatic"] = System.IO.File.ReadAllLines(pathStatic+filename);

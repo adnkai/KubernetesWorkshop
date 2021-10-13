@@ -1,0 +1,195 @@
+# Deployment Backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux 
+      containers:
+      - name: backend
+        image: akaino/backend:v2 # public
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - name: http
+          containerPort: 80
+        volumeMounts:
+        - name: claimvolumessd
+          mountPath: "/mnt/volumeMountSsd"
+        - name: claimvolumehdd
+          mountPath: "/mnt/volumeMountHdd"
+      volumes:
+      - name: claimvolumessd
+        persistentVolumeClaim:
+          claimName: claimssd
+      - name: claimvolumehdd
+        persistentVolumeClaim:
+          claimName: claimhdd
+---
+# Service Backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  type: ClusterIP 
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: backend
+---
+# Deployment Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: frontend
+        image: akaino/frontend:v2 # public
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - name: http
+          containerPort: 80 
+        volumeMounts:
+        - name: claimvolumessd
+          mountPath: "/mnt/volumeMountSsd"
+        - name: claimvolumehdd
+          mountPath: "/mnt/volumeMountHdd"
+      volumes:
+      - name: claimvolumessd
+        persistentVolumeClaim:
+          claimName: claimssd
+      - name: claimvolumehdd
+        persistentVolumeClaim:
+          claimName: claimhdd
+---
+# Loadbalancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: frontend
+---
+# Persistent volume SSD
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: persvolssd
+spec:
+  #storageClassName: local-storage
+  storageClassName: ionos-enterprise-ssd
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: /mnt/volumeMountSsd
+  persistentVolumeReclaimPolicy: Delete
+  accessModes:
+    - ReadWriteOnce
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - testpool-gca3tht46r
+            - testpool-2xvddqoqbo
+---
+# Persistent volume HDD
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: persvolhdd
+spec:
+  #storageClassName: local-storage
+  storageClassName: ionos-enterprise-hdd
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: /mnt/volumeMountHdd
+  persistentVolumeReclaimPolicy: Delete
+  accessModes:
+    - ReadWriteOnce
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - testpool-gca3tht46r
+            - testpool-2xvddqoqbo
+---
+# Volume 1 (SSD)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claimssd
+spec:
+  storageClassName: ionos-enterprise-ssd
+  volumeName: persvolssd
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi
+---
+# Volume 2 (HDD)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claimhdd
+spec:
+  storageClassName: ionos-enterprise-hdd
+  volumeName: persvolhdd
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi

@@ -55,9 +55,18 @@ namespace Backend.Controllers
     }
 
     private void WriteFile(string filename, IEnumerable<WeatherForecast> stuff) {
-      string path = "/mnt/azure/";
+      string path = "/mnt/volumeMountSsd/";
+      string staticPath = "/mnt/volumeMountHdd/";
       using (System.IO.StreamWriter file =
         new System.IO.StreamWriter(path+filename, true))
+      {
+        foreach (WeatherForecast line in stuff)
+        {
+          file.WriteLine("DYNAMIC SHARE: " + line.ToString());
+        }
+      }
+      using (System.IO.StreamWriter file =
+        new System.IO.StreamWriter(staticPath+filename, true))
       {
         foreach (WeatherForecast line in stuff)
         {
